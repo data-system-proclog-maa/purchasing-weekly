@@ -3,8 +3,8 @@ import numpy as np
 import os
 from datetime import datetime
 from typing import Dict, Optional, List
-from localization import assign_department, split_by_department
-from loader import load_excel_data
+from app.localization import assign_department, split_by_department
+from app.loader import load_excel_data
 
 def process_procurement_data(
     po_file: str,
