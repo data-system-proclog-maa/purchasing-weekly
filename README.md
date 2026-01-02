@@ -69,13 +69,13 @@ python src/app/main.py \
 ```
 
 
-### Migration Guide
-Previous Version
+## Migration Guide
+### Previous Version
 ```bash
 python src/app/main.py
 ```
 
-Current Version
+### Current Version
 ```bash
 pip install -e
 python3 -m app.main
