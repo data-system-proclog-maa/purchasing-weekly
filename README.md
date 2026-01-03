@@ -14,6 +14,7 @@ PURCHASING-WEEKLY/
 │   │   └── styler.py            # Excel styling and formatting
 │   └── legacy/                # Archive for old scripts/notebooks
 │       └── procurement_processor_updated copy.ipynb # Original notebook
+├── pyproject.toml             # Package & CLI config
 ├── requirements.txt           # Python dependencies
 ├── walkthrough.md             # Usage guide
 └── README.md                  # Project documentation
@@ -43,11 +44,18 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+Run from the root folder:
+```bash
+python3 -m app.main
+```
+
 ### Interactive Mode
 Simply run the script to be prompted for inputs:
 ```bash
 python src/app/main.py
 ```
+
+###
 
 ### Command Line Mode
 For automation:
@@ -59,3 +67,39 @@ python src/app/main.py \
   --end-date "21-11-2025" \
   --output-dir "/path/to/output"
 ```
+
+
+## Migration Guide
+### Previous Version
+```bash
+python src/app/main.py
+```
+
+### Current Version
+```bash
+pip install -e
+python3 -m app.main
+```
+
+### Why the change?
+To accomodate cli automation
+
+### What's different?
+| Old | New | 
+| ------------- | ------------- |
+| Script execution | Package execution |
+| Fragile imports| Flexible imports |
+| Hard to reuse | Import as library |
+| Not automation-friendly | Github actions ready |
+
+
+### Using this project from another repo
+```bash
+git+https://github.com/data-system-proclog-maa/purchasing-weekly.git@main
+```
+
+Then import:
+```bash
+from app import run
+```
+

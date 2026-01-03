@@ -2,8 +2,8 @@ import argparse
 import os
 import sys
 import pandas as pd
-from processor import process_procurement_data
-from styler import style_and_reorder_excel_by_process
+from app.processor import process_procurement_data #added app for ingestion
+from app.styler import style_and_reorder_excel_by_process #added app for ingestion
 from typing import Optional
 
 def get_input(prompt: str, required: bool = True) -> Optional[str]:
@@ -14,6 +14,59 @@ def get_input(prompt: str, required: bool = True) -> Optional[str]:
         if not required:
             return None
         print("This field is required.")
+
+def run(
+    po_file: str,
+    rfm_file: str,
+    start_date: str,
+    end_date: str,
+    normalization_file: Optional[pd.DataFrame] = None,
+    output_dir: Optional[str] = None
+):
+    """
+    Programmatic entry point for processing procurement data.
+    """
+    # Validate input files
+    if not os.path.exists(po_file):
+        raise FileNotFoundError(f"PO file not found at {po_file}")
+    if not os.path.exists(rfm_file):
+        raise FileNotFoundError(f"RFM file not found at {rfm_file}")
+
+    # Create output directory if it doesn't exist
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Use default normalization file if not provided
+    if normalization_file is None:
+        try:
+            normalization_file = pd.read_csv(f'https://docs.google.com/spreadsheets/d/1EZ7kPPvnRqvR5UN0Vi0NNLpLTNXEArzRklsVTIGb1vc/gviz/tq?tqx=out:csv&gid=0')
+        except Exception as e:
+            print(f"Warning: Could not fetch normalization file: {e}")
+            normalization_file = None
+
+    try:
+        # Process data
+        print("Starting data processing...")
+        output_files = process_procurement_data(
+            po_file=po_file,
+            rfm_file=rfm_file,
+            datestart=start_date,
+            dateend=end_date,
+            normalization_file=normalization_file,
+            output_dir=output_dir
+        )
+        
+        # Style files
+        print("Starting file styling...")
+        style_and_reorder_excel_by_process(output_files['po_output_path'])
+        style_and_reorder_excel_by_process(output_files['rfm_output_path'])
+        
+        print("Processing completed successfully.")
+        return output_files
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise
 
 def main():
     parser = argparse.ArgumentParser(description="Process procurement data for weekly reporting.")
@@ -49,41 +102,15 @@ def main():
             parser.print_help()
             sys.exit(1)
 
-    normalization_file = pd.read_csv(f'https://docs.google.com/spreadsheets/d/1EZ7kPPvnRqvR5UN0Vi0NNLpLTNXEArzRklsVTIGb1vc/gviz/tq?tqx=out:csv&gid=0')
-    
-    # Validate input files
-    if not os.path.exists(args.po_file):
-        print(f"Error: PO file not found at {args.po_file}")
-        sys.exit(1)
-    if not os.path.exists(args.rfm_file):
-        print(f"Error: RFM file not found at {args.rfm_file}")
-        sys.exit(1)
-    
-    # Create output directory if it doesn't exist
-    if args.output_dir and not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
-
     try:
-        # Process data
-        print("Starting data processing...")
-        output_files = process_procurement_data(
+        run(
             po_file=args.po_file,
             rfm_file=args.rfm_file,
-            datestart=args.start_date,
-            dateend=args.end_date,
-            normalization_file=normalization_file,
+            start_date=args.start_date,
+            end_date=args.end_date,
             output_dir=args.output_dir
         )
-        
-        # Style files
-        print("Starting file styling...")
-        style_and_reorder_excel_by_process(output_files['po_output_path'])
-        style_and_reorder_excel_by_process(output_files['rfm_output_path'])
-        
-        print("Processing completed successfully.")
-        
     except Exception as e:
-        print(f"An error occurred: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
